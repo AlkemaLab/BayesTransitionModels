@@ -172,8 +172,8 @@ fpemplus <- function(
   }
 
   ###### Load model #####
-  include_paths <- system.file("include", package = "fpemplus")
-  stan_file_path <- system.file("stan/fpem_spline.stan", package = "fpemplus")
+  include_paths <- system.file("include", package = "BayesTransitionModels")
+  stan_file_path <- system.file("stan/fpem_spline.stan", package = "BayesTransitionModels")
   if(model == "spline") {
     # Replace tags with correct values
     stan_code <- readr::read_file(stan_file_path) %>%
@@ -214,8 +214,6 @@ fpemplus <- function(
     year = seq(start_year, end_year),
     t = 1:length(year)
   )
-
-
 
   country_index <- data %>%
     dplyr::distinct(!!! syms(hierarchical_column_names)) %>%

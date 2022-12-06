@@ -86,15 +86,12 @@ tfrplus <- function(
   }
 
   ###### Load model #####
-  include_paths <- system.file("include", package = "fpemplus")
-  user_header_path <- system.file("include/deboor.hpp", package = "fpemplus")
-  stan_file_path <- system.file("stan/tfr_spline.stan", package = "fpemplus")
+  include_paths <- system.file("include", package = "BayesTransitionModels")
+  stan_file_path <- system.file("stan/tfr_spline.stan", package = "BayesTransitionModels")
   if(model == "spline") {
     stan_model <- cmdstanr::cmdstan_model(
       stan_file_path,
-      include_paths = include_paths,
-      stanc_options = list("allow-undefined" = TRUE, "name" = "fpem_spline"),
-      cpp_options = list(USER_HEADER = user_header_path),
+      include_paths = include_paths
     )
   }
   else {
@@ -162,7 +159,7 @@ tfrplus <- function(
 
   # Set up spline basis
   knots <- sort(c(-100, seq(0, 1, length.out = num_knots)))
-  grid <- seq(from = 0, to = 1, by = .02) # generating inputs
+  grid <- c(-100, seq(from = 0, to = 1, by = .02)) # generating inputs
 
   B <- t(bs(grid, knots = knots, degree = spline_degree, intercept = FALSE))
   B <- B[1:(nrow(B) - 1), ]

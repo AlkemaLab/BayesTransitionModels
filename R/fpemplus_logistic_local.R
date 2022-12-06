@@ -131,8 +131,8 @@ fpemplus_logistic_local <- function(
   }
 
   ###### Load model #####
-  include_paths <- system.file("include", package = "fpemplus")
-  stan_file_path <- system.file("stan/fpem_spline_logistic_local.stan", package = "fpemplus")
+  include_paths <- system.file("include", package = "BayesTransitionModels")
+  stan_file_path <- system.file("stan/fpem_spline_logistic_local.stan", package = "BayesTransitionModels")
   if(model == "spline") {
     stan_model <- cmdstanr::cmdstan_model(
       stan_file_path,

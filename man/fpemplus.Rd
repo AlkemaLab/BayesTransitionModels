@@ -23,6 +23,7 @@ fpemplus(
   hierarchical_level = c("intercept", area),
   tau_prior = "normal(0, 1)",
   rho_prior = "uniform(0, 1)",
+  extra_stan_data = list(),
   held_out = FALSE,
   ...
 )

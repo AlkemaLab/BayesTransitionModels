@@ -161,8 +161,8 @@ fpemplus_logistic <- function(
   }
 
   ###### Load model #####
-  include_paths <- system.file("include", package = "fpemplus")
-  stan_file_path <- system.file("stan/fpem_spline_logistic.stan", package = "fpemplus")
+  include_paths <- system.file("include", package = "BayesTransitionModels")
+  stan_file_path <- system.file("stan/fpem_spline_logistic.stan", package = "BayesTransitionModels")
   if(model == "spline") {
     # Replace tags with correct values
     stan_code <- readr::read_file(stan_file_path) %>%

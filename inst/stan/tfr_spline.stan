@@ -1,16 +1,9 @@
 functions {
   #include ./scale_blocks.stan
-
-  real deboor2(real P, row_vector a, vector ext_knots);
-  real deboor3(real P, row_vector a, vector ext_knots);
+  #include ./deboor.stan
 
   real rate_spline(real P, real P_tilde, real P_tilde2, row_vector a, vector ext_knots, int num_basis, int spline_degree) {
-    if(spline_degree == 3) {
-      return deboor3((P - P_tilde) / P_tilde2, a, ext_knots);
-    }
-    else {
-      return deboor2((P - P_tilde) / P_tilde2, a, ext_knots);
-    }
+    return deboor((P - P_tilde) / P_tilde2, ext_knots, a, spline_degree);
   }
 }
 
