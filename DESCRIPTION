@@ -1,4 +1,4 @@
-Package: fpemplus
+Package: BayesTransitionModels
 Title: Flexible spline-based estimation of transition models
 Version: 0.0.0.9000
 Authors@R: c(person("Herbert", "Susmann", email = "herbps10@gmail.com", role = c("aut", "cre")),
