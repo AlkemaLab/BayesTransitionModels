@@ -1,4 +1,4 @@
 library(testthat)
-library(fpemplus)
+library(BayesTransitionModels)
 
-test_check("fpemplus")
+test_check("BayesTransitionModels")
