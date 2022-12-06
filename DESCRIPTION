@@ -1,0 +1,42 @@
+Package: fpemplus
+Title: Flexible spline-based estimation of transition models
+Version: 0.0.0.9000
+Authors@R: c(person("Herbert", "Susmann", email = "herbps10@gmail.com", role = c("aut", "cre")),
+             person("Leontine", "Alkema", email = "lalkema@umass.edu", role = c("aut")),
+             person("Boming", "Zhang", email = "bomingzhang@umass.edu", role = c("aut")))
+Description: The fpemplus package implements Bayesian transition models that use flexible spline-based modeling techniques to estimate and project demographic and health indicators.
+License: BSD 3-Clause "New" or "Revised" License
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.1
+Suggests: 
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Imports:
+    splines,
+    dplyr,
+    fpemlocal,
+    tidybayes,
+    ggdist,
+    truncnorm,
+    magrittr,
+    forcats,
+    ggplot2,
+    purrr,
+    stringr,
+    tibble,
+    tidyr,
+    glue,
+    rlang,
+    readr,
+    cmdstanr
+Remotes:
+    github::AlkemaLab/fpemlocal,
+    github::stan-dev/cmdstanr
+Depends: 
+    R (>= 2.10)
+LazyData: true
+

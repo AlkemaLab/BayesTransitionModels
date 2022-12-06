@@ -1,0 +1,134 @@
+---
+title: "Using BayesTransitionModels to generate national estimates of mCPR"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Using BayesTransitionModels to generate national estimates of mCPR}
+  %\VignetteEngine{knitr::knitr}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6.5,
+  fig.height = 5
+)
+```
+
+This vignette demonstrates fitting the `BayesTransitionModels` model to national modern contraceptive prevalence rate (mCPR) data from a subset of countries.
+
+```{r setup}
+library(tidyverse)
+library(BayesTransitionModels)
+```
+
+To start, we use the `national_data` function to extract national mCPR data from 10 countries.
+```{r extract_data}
+data <- national_data(
+  countries = c("Somalia", "India", "Palau", "Bangladesh", "Zimbabwe",
+                "Indonesia", "Kenya", "Turkey", "Mexico", "Guatemala"),
+  start_year = 1970
+)
+```
+
+Let's take a look at what the raw data look like.
+```{r data_plot}
+data %>%
+  ggplot(aes(x = year, y = contraceptive_use_modern)) +
+  geom_point() +
+  facet_wrap(~name_country) +
+  labs(x = "Year", y = "mCPR")
+```
+
+Next, we fit the model using the `BayesTransitionModels` function. Note here for demonstration purposes, and to save computation time, we are using values for `adapt_delta` and `max_treedepth` that are too low and cause divergent transitions and transitions that exceed the maximum treedepth; in practice both of these parameters should be increased until no warning messages are shown.
+
+```{r bayestransitionmodels-fit, cache = TRUE}
+fit <- transitionmodel(
+  data,
+  y = "contraceptive_use_modern",
+  se = "se_modern",
+  year = "year",
+  source = "data_series_type",
+  area = "name_country",
+  
+  start_year = 1970, 
+  end_year = 2030, 
+  
+  model = "spline",
+  
+  # Spline setup
+  spline_degree = 2,
+  num_knots = 7,
+  
+  # Hierarchical setup
+  hierarchical_level     = c("intercept", "name_country"), 
+  hierarchical_splines   = c("intercept", "name_country"),
+  hierarchical_asymptote = c("intercept", "name_country"),
+  
+  # Prior settings
+  tau_prior = "normal(0, 2)",
+  rho_prior = "uniform(0, 1)",
+  
+  # Stan sampler settings
+  adapt_delta = 0.95,
+  max_treedepth = 8,
+  iter_warmup = 200,
+  iter_sampling = 200,
+  seed = 5,
+  parallel_chains = 4,
+  refresh = 50
+)
+``` 
+
+Calling `summary` displays some basic information about the model fit.
+```{r transitionmodel_summary}
+summary(fit)
+```
+
+Now let's plot the main results. Use `plot_indicator` to plot the estimates and projections of mCPR over time in each country. The black line shows the posterior median of the true mCPR in each country ($\eta_{c,t}$) and time point and the shaded regions show the 50%, 80%, and 95% posterior credible intervals.
+
+```{r plot_indicator}
+plot_indicator(fit)
+```
+
+The `plot_smoother` function can be used to view the posterior estimates of the smoothing component ($\eta_{c,t}$).
+```{r plot_smoother}
+plot_smoother(fit)
+```
+
+The transition function can be plotted for each individual country using `plot_transition`. We can also plot the hierarchical global mean transition function by specifying `"intercept"` as the hierarchical level.
+```{r plot_transitions}
+plot_transition(fit, hierarchical_level = "name_country")
+plot_transition(fit, hierarchical_level = "intercept")
+```
+
+Next, the asymptotes ($P_c$) can be plotted for each level of hierarchy.
+```{r plot_asymptote_country}
+plot_asymptote(fit, "name_country", sort = TRUE)
+```
+
+```{r plot_asymptote_intercept, fig.height = 2.5}
+plot_asymptote(fit, "intercept")
+```
+
+Similarly, we can plot the level in reference year ($\Omega_c$) for each country and for the hierarchical global mean.
+```{r plot_level_country}
+plot_level(fit, hierarchical_level = "name_country", sort = TRUE)
+```
+
+```{r plot_level_intercept, fig.height = 2.5}
+plot_level(fit, hierarchical_level = "intercept")
+```
+
+The hyperparameters of the smoothing model ($\rho$ and $\tau$) can also be inspected.
+```{r plot_smoothing_hyperparameters, fig.height = 4}
+plot_smoothing_hyperparameters(fit, priors = list(
+  tau = function(x) truncnorm::dtruncnorm(x, a = 0, b = Inf, mean = 0, sd = 2),
+  rho = function(x) dunif(x, 0, 1)
+))
+```
+
+```{r plot_data_hyperparameters}
+plot_data_hyperparameters(fit, include_prior = TRUE)
+```
