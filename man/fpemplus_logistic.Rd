@@ -61,6 +61,8 @@ fpemplus_logistic(
 
 \item{hierarchical_level}{vector specifying hierarchical structure for the level in reference year (see Details).}
 
+\item{hierarchical_rate}{vector specifying hierarchical structure for rate (see Details).}
+
 \item{tau_prior}{Stan prior definition for the AR tau parameter}
 
 \item{rho_prior}{Stan prior definition for the AR rho parameter}

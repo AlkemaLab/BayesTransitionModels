@@ -44,7 +44,7 @@ data %>%
 Next, we fit the model using the `BayesTransitionModels` function. Note here for demonstration purposes, and to save computation time, we are using values for `adapt_delta` and `max_treedepth` that are too low and cause divergent transitions and transitions that exceed the maximum treedepth; in practice both of these parameters should be increased until no warning messages are shown.
 
 ```{r bayestransitionmodels-fit, cache = TRUE}
-fit <- transitionmodel(
+fit <- fpemplus(
   data,
   y = "contraceptive_use_modern",
   se = "se_modern",

@@ -16,11 +16,36 @@ tfrplus(
   num_knots = 7,
   spline_degree = 2,
   hierarchical_splines = c("intercept", area),
-  tau_prior_sd = 1,
-  rho_prior_sd = 1,
   held_out = FALSE,
   ...
 )
+}
+\arguments{
+\item{data}{a data frame.}
+
+\item{y}{column name of outcome.}
+
+\item{year}{column name of outcome year.}
+
+\item{area}{column name of the area of each observation}
+
+\item{start_year}{start year of estimates.}
+
+\item{end_year}{end year of estimates.}
+
+\item{t_star}{reference year.}
+
+\item{model}{which model to fit. Currently only "spline" is supported.}
+
+\item{num_knots}{number of spline knots.}
+
+\item{spline_degree}{spline degree. Degree 2 or 3 is supported.}
+
+\item{hierarchical_splines}{vector specifying hierarchical structure for spline coefficients (see Details).}
+
+\item{held_out}{binary vector indicating which observations are held out. Set to FALSE to hold out no observations.}
+
+\item{...}{additional arguments for CmdStanModel::sample.}
 }
 \description{
 Fit TFRplus model

@@ -31,6 +31,7 @@ find_knot_maxima <- function(knots, num_knots, spline_degree, grid) {
 #' @param hierarchical_asymptote vector specifying hierarchical structure for asymptote (see Details).
 #' @param hierarchical_level vector specifying hierarchical structure for the level in reference year (see Details).
 #' @param hierarchical_splines vector specifying hierarchical structure for spline coefficients (see Details).
+#' @param hierarchical_rate vector specifying hierarchical structure for rate (see Details).
 #' @param tau_prior Stan prior definition for the AR tau parameter
 #' @param rho_prior Stan prior definition for the AR rho parameter
 #' @param held_out binary vector indicating which observations are held out. Set to FALSE to hold out no observations.
