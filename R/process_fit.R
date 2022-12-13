@@ -50,11 +50,11 @@ extract_rate_vs_level_subhierarchical <- function(fit, f, subhierarchy, constrai
     dplyr::mutate(Y = map(.data$data, function(data) {
       if(constrain_zero == "after") {
         tibble::tibble(x = fit$stan_data$grid, Y = t(c(data$value, rep(0, num_constrained_zero)) %*% B)[,1]) %>%
-          filter(x >= 0 & x <= 1)
+          dplyr::filter(.data$x >= 0 & .data$x <= 1)
       }
       else {
         tibble::tibble(x = fit$stan_data$grid, Y = t(c(rep(0, num_constrained_zero), data$value) %*% B)[,1]) %>%
-          filter(x >= 0 & x <= 1)
+          dplyr::filter(.data$x >= 0 & .data$x <= 1)
       }
     }))  %>%
     dplyr::ungroup() %>%
@@ -255,15 +255,16 @@ process_logistic_fit <- function(fit, parallel_chains = NULL) {
   transition_quantiles <- list()
   for(column in intersect(fit$hierarchical_asymptote, fit$hierarchical_rate)) {
     transition[[column]] <- omega[[column]] %>%
-      rename(omega = value) %>%
-      left_join(P_tilde[[column]] %>% rename(P_tilde = value)) %>%
-      mutate(P_tilde = 0.5 + 0.45 * plogis(P_tilde), omega = 0.5 * plogis(omega)) %>%
-      mutate(Y = map2(omega, P_tilde, function(omega, P_tilde) {
+      dplyr::rename(omega = .data$value) %>%
+      dplyr::left_join(P_tilde[[column]] %>%
+      dplyr::rename(P_tilde = .data$value)) %>%
+      dplyr::mutate(P_tilde = 0.5 + 0.45 * plogis(P_tilde), omega = 0.5 * plogis(omega)) %>%
+      dplyr::mutate(Y = map2(omega, P_tilde, function(omega, P_tilde) {
         coefs <- map_dbl(fit$spline_maxima * P_tilde, rate_logistic_logit, P_tilde = P_tilde, omega = omega)
         coefs <- coefs[1:(length(coefs) - num_constrained_zero + 1)]
         tibble::tibble(x = fit$stan_data$grid, Y = t(c(coefs, rep(0, num_constrained_zero - 1)) %*% fit$stan_data$B)[,1])
       })) %>%
-      unnest(Y)
+      unnest(.data$Y)
 
     transition_quantiles[[column]] <- transition[[column]] %>%
       dplyr::group_by(.data$name, .data$x) %>%
@@ -341,8 +342,8 @@ process_tfr_fit <- function(fit, parallel_chains = NULL) {
     dplyr::mutate_at(vars(c, t), as.integer) %>%
     dplyr::left_join(fit$country_index, by = "c") %>%
     dplyr::left_join(fit$time_index, by = "t") %>%
-    dplyr::left_join(dplyr::select(fit$phases, start_phase2, end_phase2, c)) %>%
-    dplyr::filter(t >= start_phase2)
+    dplyr::left_join(dplyr::select(fit$phases, .data$start_phase2, .data$end_phase2, .data$c)) %>%
+    dplyr::filter(t >= .data$start_phase2)
 
   #
   # Transition function summaries

@@ -27,6 +27,7 @@ check_nas <- function(data, column) {
 #' @param hierarchical_splines vector specifying hierarchical structure for spline coefficients (see Details).
 #' @param tau_prior Stan prior definition for the AR tau parameter
 #' @param rho_prior Stan prior definition for the AR rho parameter
+#' @param extra_stan_data list of additional data to pass to Stan model
 #' @param held_out binary vector indicating which observations are held out. Set to FALSE to hold out no observations.
 #' @param ... additional arguments for CmdStanModel::sample.
 #'

@@ -1,5 +1,19 @@
 #' Fit TFRplus model
 #'
+#' @param data a data frame.
+#' @param start_year start year of estimates.
+#' @param end_year end year of estimates.
+#' @param y column name of outcome.
+#' @param year column name of outcome year.
+#' @param area column name of the area of each observation
+#' @param t_star reference year.
+#' @param model which model to fit. Currently only "spline" is supported.
+#' @param num_knots number of spline knots.
+#' @param spline_degree spline degree. Degree 2 or 3 is supported.
+#' @param hierarchical_splines vector specifying hierarchical structure for spline coefficients (see Details).
+#' @param held_out binary vector indicating which observations are held out. Set to FALSE to hold out no observations.
+#' @param ... additional arguments for CmdStanModel::sample.
+#'
 #' @export
 tfrplus <- function(
     # Data and column names
@@ -19,10 +33,6 @@ tfrplus <- function(
 
   hierarchical_splines = c("intercept", area),
 
-  # Priors
-  tau_prior_sd = 1,
-  rho_prior_sd = 1,
-
   # Out-of-sample validation
   held_out = FALSE,
 
@@ -35,18 +45,8 @@ tfrplus <- function(
   original_data <- data
 
   ###### Initial argument checks #####
-  stopifnot(is.numeric(tau_prior_sd))
-  stopifnot(is.numeric(rho_prior_sd))
   stopifnot(is.numeric(spline_degree))
   stopifnot(is.numeric(num_knots))
-
-  if(length(tau_prior_sd) > 1 || tau_prior_sd <= 0) {
-    stop("tau_prior_sd must be a single positive number.")
-  }
-
-  if(length(rho_prior_sd) > 1 || rho_prior_sd <= 0) {
-    stop("tau_prior_sd must be a single positive number.")
-  }
 
   if(!(spline_degree %in% c(2, 3))) {
     stop("spline_degree must be either 2 or 3.")
@@ -119,25 +119,25 @@ tfrplus <- function(
     dplyr::mutate(c = 1:n())
 
   phase2 <- data %>%
-    group_by(!!!sym(area)) %>%
-    summarize(start_phase2 = min(period),
-              end_phase2 = max(period)) %>%
-    left_join(country_index)
+    dplyr::group_by(!!!sym(area)) %>%
+    dplyr::summarize(start_phase2 = min(.data$period),
+                     end_phase2 = max(.data$period)) %>%
+    dplyr::left_join(country_index)
 
   # Create year lookup table
   time_index <- tibble(
     period = seq(min(phase2$start_phase2), max(end_year, max(phase2$end_phase2)), by = 5)
   ) %>%
-    mutate(t = 1:n())
+    dplyr::mutate(t = 1:n())
 
   phases <- phase2 %>%
-    left_join(time_index, by = c("start_phase2" = year)) %>%
-    mutate(start_phase2 = t) %>%
-    select(-t) %>%
-    left_join(time_index, by = c("end_phase2" = year)) %>%
-    mutate(end_phase2 = t) %>%
-    select(-t) %>%
-    arrange(c)
+    dplyr::left_join(time_index, by = c("start_phase2" = year)) %>%
+    dplyr::mutate(start_phase2 = .data$t) %>%
+    dplyr::select(-t) %>%
+    dplyr::left_join(time_index, by = c("end_phase2" = year)) %>%
+    dplyr::mutate(end_phase2 = .data$t) %>%
+    dplyr::select(-t) %>%
+    dplyr::arrange(c)
 
   year_by <- c()
   year_by[year] = year
@@ -201,12 +201,7 @@ tfrplus <- function(
     B = B,
 
     a_lower_bound = a_lower_bound,
-    a_upper_bound = a_upper_bound,
-
-
-    # AR priors
-    rho_prior_sd = rho_prior_sd,
-    tau_prior_sd = tau_prior_sd
+    a_upper_bound = a_upper_bound
   )
 
   fit <- stan_model$sample(
