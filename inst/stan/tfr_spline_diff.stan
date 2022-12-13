@@ -19,6 +19,7 @@ data {
   int<lower=1, upper=T> time[N];     // Time of each observation
   int<lower=1, upper=C> country[N];  // Country of each observation
   int<lower=0, upper=1> held_out[N];
+  int t_last;
 
   int num_knots;
   vector[num_knots] knots;
@@ -49,23 +50,20 @@ transformed data {
   int num_constrained_zero = spline_degree + 1;
 
   int num_epsilon = 0;
+  matrix[C, t_last] ymat = rep_matrix(0, C, t_last);
 
 
   vector[C] Omega;
-  vector[C] proj_start;
   for(c in 1:C) {
     for(i in 1:N) {
       if(country[i] == c && time[i] == start_phase2[c]) {
         Omega[c] = y[i];
       }
-
-      if(country[i] == c && time[i] == end_phase2[c]) {
-        proj_start[c] = y[i];
-      }
     }
   }
-  for(c in 1:C) {
-    num_epsilon += end_phase2[c] - start_phase2[c];
+
+  for(i in 1:N) {
+    ymat[country[i], time[i]] = y[i];
   }
 
   ext_knots[1:spline_degree] = rep_vector(knots[1], spline_degree);
@@ -79,28 +77,15 @@ parameters {
   matrix<lower=0>[a_n_re, num_basis - num_constrained_zero] a_sigma;
 
   real<lower=0> epsilon_scale;
-  vector[num_epsilon] epsilon_raw;
   //real<lower=0> sigma;
 }
 
 transformed parameters {
-  matrix[C, T] eta = rep_matrix(0, C, T);
   matrix[C, T] transition_function = rep_matrix(0, C, T);
   matrix[C, num_basis] a;
-  matrix[C, T] epsilon = rep_matrix(0, C, T);
   vector[C] P_tilde;
   vector[C] P_tilde2;
   real<lower=0> sigma = 0.25;
-
-  {
-    int index = 1;
-    for(c in 1:C) {
-      for(t in (start_phase2[c] + 1):end_phase2[c]) {
-        epsilon[c, t] = epsilon_scale * epsilon_raw[index];
-        index = index + 1;
-      }
-    }
-  }
 
   matrix[a_n_terms, num_basis - num_constrained_zero] a_star;
 
@@ -114,12 +99,10 @@ transformed parameters {
 
   for(c in 1:C) {
     a[c, 1:num_constrained_zero] = rep_row_vector(0, num_constrained_zero);
-    eta[c, start_phase2[c]] = Omega[c];
     P_tilde2[c] = Omega[c] - P_tilde[c];
 
     for(t in (start_phase2[c] + 1):end_phase2[c]) {
-      transition_function[c, t] = rate_spline(eta[c, t - 1], P_tilde[c], P_tilde2[c], a[c,], ext_knots, num_basis, spline_degree);
-      eta[c, t] = eta[c, t - 1] + transition_function[c,t] + epsilon[c, t];
+      transition_function[c, t] = rate_spline(ymat[c, t - 1], P_tilde[c], P_tilde2[c], a[c,], ext_knots, num_basis, spline_degree);
     }
   }
 }
@@ -128,49 +111,23 @@ model {
   to_vector(a_raw) ~ std_normal();
   to_vector(a_sigma) ~ normal(0, 0.5);
 
-  epsilon_raw ~ std_normal();
   epsilon_scale ~ std_normal();
 
-  //sigma ~ std_normal();
-
   for(i in 1:N) {
-    if(held_out[i] == 0) {
-      y[i] ~ normal(eta[country[i], time[i]], sigma);
+    if(held_out[i] == 0 && time[i] > start_phase2[country[i]]) {
+      ymat[country[i], time[i]] - ymat[country[i], time[i] - 1] ~ normal(transition_function[country[i], time[i]], epsilon_scale);
     }
   }
 }
 generated quantities {
-  vector[N] y_pred;
-  vector[N] resid;
-  vector[N] pit;
-  matrix[C, T] eta_pred = rep_matrix(0, C, T);
-  matrix[C, T] eta_pred2 = rep_matrix(0, C, T);
+  matrix[C, T] eta = rep_matrix(0, C, T);
 
   for(c in 1:C) {
-    for(t in 1:T) {
-      eta_pred[c,t] = normal_rng(eta[c, t], sigma);
-    }
-  }
-
-  for(c in 1:C) {
+    eta[c, 1:t_last] = ymat[c, 1:t_last];
     for(t in (end_phase2[c] + 1):T) {
       real error = normal_rng(0, epsilon_scale);
-      //real error = 0;
-      //real error = normal_rng(0, sigma);
-      if(t == (end_phase2[c] + 1)) {
-        real transition = rate_spline(proj_start[c], P_tilde[c], P_tilde2[c], a[c,], ext_knots, num_basis, spline_degree);
-        eta_pred2[c, t] = proj_start[c] + transition + error;
-      }
-      else {
-        real transition = rate_spline(eta_pred2[c, t - 1], P_tilde[c], P_tilde2[c], a[c,], ext_knots, num_basis, spline_degree);
-        eta_pred2[c, t] = eta_pred2[c, t - 1] + transition + error;
-      }
+      real transition = rate_spline(eta[c, t - 1], P_tilde[c], P_tilde2[c], a[c,], ext_knots, num_basis, spline_degree);
+      eta[c, t] = eta[c, t - 1] + transition + error;
     }
-  }
-
-  for(i in 1:N) {
-    y_pred[i]  = normal_rng(eta[country[i], time[i]], sigma);
-    resid[i]   = y_pred[i] - y[i];
-    pit[i]     = normal_cdf(y[i] | eta[country[i], time[i]], sigma);
   }
 }

@@ -366,20 +366,20 @@ process_tfr_fit <- function(fit, parallel_chains = NULL) {
   #
   # Data model
   #
-  sigma <- fit$samples$draws("sigma")
+  #sigma <- fit$samples$draws("sigma")
 
   #
   # Generated quantities
   #
-  generated_quantities <- fit$samples$draws(c("pit", "resid", "y_pred")) %>%
-    tidybayes::spread_draws(pit[i], resid[i], y_pred[i])
+  #generated_quantities <- fit$samples$draws(c("pit", "resid", "y_pred")) %>%
+  #  tidybayes::spread_draws(pit[i], resid[i], y_pred[i])
 
   ans <- list(
     temporal = temporal,
     transition = transition,
     transition_quantiles = transition_quantiles,
-    sigma = sigma,
-    generated_quantities = generated_quantities,
+    #sigma = sigma,
+    #generated_quantities = generated_quantities,
     a_sigma = a_sigma
   )
 

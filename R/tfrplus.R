@@ -87,7 +87,7 @@ tfrplus <- function(
 
   ###### Load model #####
   include_paths <- system.file("include", package = "BayesTransitionModels")
-  stan_file_path <- system.file("stan/tfr_spline.stan", package = "BayesTransitionModels")
+  stan_file_path <- system.file("stan/tfr_spline_diff.stan", package = "BayesTransitionModels")
   if(model == "spline") {
     stan_model <- cmdstanr::cmdstan_model(
       stan_file_path,
@@ -175,6 +175,7 @@ tfrplus <- function(
     T = nrow(time_index),
     N = nrow(data),
     held_out = held_out,
+    t_last = t_last,
 
     time = array(data$t),
     country = array(data$c),
@@ -213,6 +214,9 @@ tfrplus <- function(
     save_latent_dynamics = TRUE,
     ...
   )
+
+  source <- "source"
+  original_data$source <- ""
 
   result <- list(samples = fit,
                  data = original_data,
