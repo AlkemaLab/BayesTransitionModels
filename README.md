@@ -18,4 +18,13 @@ Install `BayesTransitionModels` from Github:
 remotes::install_github("AlkemaLab/BayesTransitionModels")
 ```
 
+Note that when running the package in a parallel computing environment, for example on a computing cluster, it may be necessary to make the following adaption in `R/fpemplus.R` and `R/fpemplus-logistic.R`. Change the following line:
+```
+temp_stan_file_path <- cmdstanr::write_stan_file(stan_code)
+```
+to:
+```
+temp_stan_file_path <- cmdstanr::write_stan_file(stan_code, hash_salt = Sys.getpid())
+```
+
 This work was supported, in whole or in part, by the Bill & Melinda Gates Foundation (INV-00844). 
