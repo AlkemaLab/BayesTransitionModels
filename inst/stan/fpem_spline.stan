@@ -223,11 +223,11 @@ transformed parameters {
 
 model {
   // P_tilde
-  P_tilde_sigma ~ std_normal();
+  P_tilde_sigma_raw ~ std_normal();
   P_tilde_raw   ~ std_normal();
 
   // Omega
-  Omega_sigma ~ std_normal();
+  Omega_sigma_raw ~ std_normal();
   Omega_raw   ~ std_normal();
 
 
@@ -238,7 +238,7 @@ model {
   }
 
   to_vector(a_raw) ~ std_normal();
-  to_vector(a_sigma) ~ std_normal();
+  to_vector(a_sigma_raw) ~ std_normal();
 
   nonse ~ normal(0, 0.1);
 
