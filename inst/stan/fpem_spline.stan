@@ -146,13 +146,13 @@ transformed parameters {
 
   vector<lower=0>[N] scale;
 
-  a_sigma[1, ] = rep_row_vector(1, num_basis - num_constrained_zero);
+  a_sigma[1, ] = rep_row_vector(5, num_basis - num_constrained_zero);
   if(a_n_re > 1) a_sigma[2:a_n_re, ] = a_sigma_raw;
 
-  Omega_sigma[1] = 1;
+  Omega_sigma[1] = 3;
   if(Omega_n_re > 1) Omega_sigma[2:Omega_n_re] = Omega_sigma_raw;
 
-  P_tilde_sigma[1] = 1;
+  P_tilde_sigma[1] = 3;
   if(P_tilde_n_re > 1) P_tilde_sigma[2:P_tilde_n_re] = P_tilde_sigma_raw;
 
   if(smoothing == 1) {
@@ -223,24 +223,38 @@ transformed parameters {
 
 model {
   // P_tilde
-  P_tilde_sigma ~ std_normal();
+	//for(i in 1:(P_tilde_n_re - 1)) {
+  //	P_tilde_sigma_raw[i] ~ normal(0, 3) T[0, positive_infinity()];
+	//}
+	P_tilde_sigma_raw ~ normal(0, 3);
   P_tilde_raw   ~ std_normal();
 
   // Omega
-  Omega_sigma ~ std_normal();
+	//for(i in 1:(Omega_n_re - 1)) {
+  //	Omega_sigma_raw[i] ~ normal(0, 3) T[0, positive_infinity()];
+	//}
+	Omega_sigma_raw ~ normal(0, 3);
   Omega_raw   ~ std_normal();
 
 
   if(smoothing == 1) {
-    est_rho[1] ~ {{RHO_PRIOR}};
-    est_tau[1] ~ {{TAU_PRIOR}};
+    est_rho[1] ~ {{RHO_PRIOR}} T[0, 1];
+    est_tau[1] ~ {{TAU_PRIOR}} T[0, positive_infinity()];
     to_vector(epsilon_innovation) ~ std_normal();
   }
 
   to_vector(a_raw) ~ std_normal();
-  to_vector(a_sigma) ~ std_normal();
+	//for(i in 1:(a_n_re - 1)) {
+	//	for(j in 1:(num_basis - num_constrained_zero)) {
+	//		a_sigma_raw[i, j] ~ normal(0, 5) T[0, positive_infinity()];
+	//  }
+	//}
+	to_vector(a_sigma_raw) ~ normal(0, 5);
 
-  nonse ~ normal(0, 0.1);
+	//for(i in 1:S) {
+  //	nonse[i] ~ normal(0, 0.1) T[0, positive_infinity()];
+	//}
+	nonse ~ normal(0, 0.1);
 
   for(i in 1:N) {
     if(held_out[i] == 0) {
